@@ -27,17 +27,21 @@
 #include <I2S.h>
 #endif
 
+#ifdef ESP8266
+#define I2S_MCLK_MULTIPLE_DEFAULT 0
+#endif
+
 class AudioOutputI2S : public AudioOutput
 {
   public:
 #if defined(ESP32) || defined(ESP8266)
-    AudioOutputI2S(int port=0, int output_mode=EXTERNAL_I2S, int dma_buf_count = 8, int use_apll=APLL_DISABLE);
+	AudioOutputI2S(int port=0, int output_mode=EXTERNAL_I2S, int dma_buf_count = 8, int use_apll=APLL_DISABLE, uint8_t mult=I2S_MCLK_MULTIPLE_DEFAULT, uint32_t freq=0);
     enum : int { APLL_AUTO = -1, APLL_ENABLE = 1, APLL_DISABLE = 0 };
     enum : int { EXTERNAL_I2S = 0, INTERNAL_DAC = 1, INTERNAL_PDM = 2 };
 #elif defined(ARDUINO_ARCH_RP2040)
     AudioOutputI2S(long sampleRate = 44100, pin_size_t sck = 26, pin_size_t data = 28);
 #endif
-    bool SetPinout(int bclkPin, int wclkPin, int doutPin);
+    bool SetPinout(int bclkPin, int wclkPin, int doutPin, int mclk = I2S_PIN_NO_CHANGE, int din = I2S_PIN_NO_CHANGE);
     virtual ~AudioOutputI2S() override;
     virtual bool SetRate(int hz) override;
     virtual bool SetBitsPerSample(int bits) override;
@@ -68,7 +72,11 @@ class AudioOutputI2S : public AudioOutput
     uint8_t bclkPin;
     uint8_t wclkPin;
     uint8_t doutPin;
-
+    int8_t dinPin;
+    int8_t mclkPin;
+	uint8_t mcmult;
+	uint32_t mclk_freq;
+	
 #if defined(ARDUINO_ARCH_RP2040)
     I2S i2s;
 #endif
